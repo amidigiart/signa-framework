@@ -97,7 +97,19 @@ Evaluation of AI outputs is an active research area with multiple approaches:
 
 **Academic timestamping.** Zenodo (DOI), arXiv, and institutional repositories provide verifiable publication timestamps. These prove that a document existed at a stated time — existence certification, not meaning certification.
 
-### 2.4 The Gap SIGNA Addresses
+### 2.4 Alternative Approaches to Semantic Certification
+
+Before proposing SIGNA, we consider why alternative approaches are insufficient:
+
+**Single-model self-certification:** Provider certifies own outputs. Problem: structural conflict of interest — defendant as judge. Historical precedent: credit rating agencies owned by banks failed in 2008.
+
+**Crowd-sourced validation:** Users rate output quality. Problem: vulnerable to coordinated manipulation, no accountability, inconsistent standards. Historical precedent: Wikipedia works for facts but not safety-critical certification.
+
+**Regulatory pre-approval:** Government agency certifies each output. Problem: impossible at scale (millions of outputs per hour), lacks technical expertise, politicized. Historical precedent: FDA drug approval takes 10–15 years; AI outputs iterate in seconds.
+
+SIGNA occupies the structural position that emerges in mature ecosystems: independent third-party certification that is neither provider, government, nor crowd, but a specialized institution applying rigorous, transparent methodology.
+
+### 2.5 The Gap SIGNA Addresses
 
 | Capability | Benchmarks | Hallucination Detection | Red-teaming | LLM-as-Judge | C2PA | SIGNA |
 |-----------|-----------|-------------------------|-------------|--------------|------|-------|
@@ -157,7 +169,20 @@ The weight vector W determines the relative importance of each pillar for a give
 
 Weights are configurable per deployment. The default is uniform (1/6 each). Domain-specific weights reflect the reality that manipulation in education is primarily emotional, manipulation in healthcare is primarily factual, and manipulation in finance is primarily logical.
 
-### 3.4 Certificate Levels
+### 3.4 Weight Vector Calibration Methodology
+
+Current weight vectors (Table 3.3) are based on the author's domain expertise and preliminary risk assessment. This is an acknowledged limitation.
+
+**Planned empirical validation:**
+
+- **Domain expert survey:** 50+ experts per domain (education, healthcare, finance, legal) rate manipulation scenarios by pillar importance. Statistical analysis yields empirically-derived weights.
+- **User studies:** Measure which pillar failures cause most harm in each domain. Example: P3 (emotional) failures cause more harm in education than P5 (logic) failures.
+- **Adversarial testing:** Identify which pillars are most evadable in each domain. Increase weights for robust pillars, invest in improving weak pillars.
+- **Interim approach:** Until empirical validation complete, default to uniform weights (1/6 each) unless domain-specific risks are well-understood.
+
+**Honest assessment:** Weight vector calibration is an open research problem. SIGNA provides the architecture; empirical validation requires controlled studies.
+
+### 3.5 Certificate Levels
 
 SIGNA defines four certification levels based on the composite trust score T(O):
 
@@ -460,7 +485,7 @@ These regulatory mappings represent the author's interpretation and do not const
 
 4. **Concordance assumption.** Cross-model agreement is a useful heuristic but not a proof of truth. Models trained on similar data may agree on the same falsehood. SIGNA addresses this partially through structurally different validation methods (not just model agreement, but pillar-specific analysis), but the limitation remains.
 
-5. **Scalability untested.** Per-output certification adds latency. Real-time certification at scale (millions of outputs per hour) has not been tested.
+5. **Scalability untested.** Per-output certification adds latency (estimated 200–500ms). Real-time certification at scale (millions of outputs per hour) has not been tested. **Fallback strategy:** If latency unacceptable, SIGNA can operate in "sampling mode" — certify random sample of outputs (e.g., 10%) rather than every output. Statistical sampling provides confidence interval for overall trustworthiness without per-output overhead.
 
 6. **Weight vector subjectivity.** Domain-specific weights are currently based on the author's assessment of which pillars matter most in each domain. Empirical validation of weight vectors through user studies and domain expert consultation is needed.
 
@@ -508,6 +533,46 @@ This is the same standard applied in every mature certification domain: a food s
 
 SIGNA applies this standard to meaning itself.
 
+### 8.5 Threat Model
+
+SIGNA faces three primary threat categories:
+
+**Attack 1: Evasion through optimization**
+
+*Threat:* AI providers learn SIGNA's six pillars and optimize outputs to pass validation while maintaining manipulative intent. Example: emotional manipulation rephrased to avoid P3 keyword patterns.
+
+*Current mitigation:*
+
+- Public methodology creates accountability
+- Regular pillar updates based on emerging techniques
+- Concordance cross-validation (evasion must fool multiple validators)
+
+*Remaining vulnerability:* Sophisticated evasion may pass v0.1 heuristic detection. NLP-based semantic analysis (planned) would be more robust.
+
+**Attack 2: SIGNA compromise**
+
+*Threat:* Attacker compromises SIGNA implementation to issue false certificates.
+
+*Mitigation:*
+
+- Blockchain anchoring (anyone can verify without trusting SIGNA)
+- Open protocol (competing implementations can expose fraud)
+- Audit trail (every certificate cryptographically signed)
+
+*Remaining vulnerability:* If majority of SIGNA implementations compromised, trust layer fails. Same vulnerability as SSL CAs — mitigated by transparency.
+
+**Attack 3: Provider boycott**
+
+*Threat:* Major providers refuse SIGNA integration, arguing it adds latency or competitive disadvantage.
+
+*Mitigation:*
+
+- Wrapper mode (SIGNA calls provider APIs without cooperation)
+- Regulatory mandate (EU AI Act creates compliance pressure)
+- Consumer demand (certified outputs become procurement requirement)
+
+*Remaining vulnerability:* Wrapper mode adds 200–500ms latency. If too slow, providers may successfully resist adoption.
+
 ## 9. Conclusion
 
 The cognitive services market generates meaning at unprecedented scale. What it lacks is a way to certify that meaning.
@@ -527,7 +592,7 @@ All BRIDGRAI components referenced in this paper are publicly available:
 - Source code: github.com/amidigiart (75+ public repositories)
 - CAMP protocol: github.com/amidigiart/camp-protocol
 - Blockchain transactions: Tezos mainnet, wallet tz1bmw3igCLN8N6CqgLBzJ9dyRb79E2Tdu5Q
-- Test suites: 102 automated tests (UKBE Core), 18 integration tests (A2A platform)
+- Test suites: 175 automated tests (UKBE Core), 18 integration tests (A2A platform)
 - KCE framework: DOI 10.5281/zenodo.22667873
 
 ## Funding
@@ -544,6 +609,7 @@ This paper was produced using AI assistance:
 
 - **Research phase:** Prior art and naming verification conducted using Claude (Anthropic) — web searches for existing uses of the SIGNA name and related certification frameworks. All claims verified by the human author.
 - **Drafting phase:** Paper structure and content drafted with assistance from Claude (Anthropic). All content reviewed, corrected, and adopted by the human author.
+- **Critical review:** Structural review conducted using Qwen (Alibaba Cloud) to identify weaknesses. All identified issues addressed in final version.
 - **Cross-model methodology:** The BRIDGRAI ecosystem was developed using cross-model friction methodology — multiple AI models (Claude, Grok, DeepSeek, Gemini, Qwen) tested against each other to reduce single-source bias.
 
 The author bears full responsibility for all claims.
@@ -651,7 +717,7 @@ signa_certificate:
 ## Appendix C: L1 Metadata for This Paper
 
 ```yaml
-artifact_id: SIGNA-PAPER-v1.0
+artifact_id: SIGNA-PAPER-v1.1
 human_author:
   name: Mihai Roșca
   orcid: 0009-0001-1422-6209
@@ -661,6 +727,9 @@ ai_contributors:
   - model_name: Claude
     provider: Anthropic
     role: draft assistance, naming verification, prior art research
+  - model_name: Qwen
+    provider: Alibaba Cloud
+    role: critical review, structural improvements
 creation_timestamp: 2026-09-10T00:00:00Z
 intent: >
   Define SIGNA as certification framework for AI output trustworthiness.
@@ -680,15 +749,16 @@ transformation_record:
       "NOMI" (Notary Of Meaning and Intention) conflicts with
       Nomi Assurance (asknomi.net), an existing AI assurance platform.
       SIGNA (Semantic Intent Guarantee and Notary Architecture)
-      is unique, etymologically grounded (Latin: signa = signs/marks),
+      is unique, etymologically grounded (Latin: signa = signs),
       and captures the certification function precisely.
   - timestamp: 2026-09-10
-    actor: Mihai Roșca + Claude (Anthropic)
-    action: Paper drafted with six-pillar architecture
+    actor: Mihai Roșca + Qwen (critical review)
+    action: Addressed 6 structural weaknesses
     rationale: >
-      Full SIGNA specification with formal definitions,
-      validation pipeline, BRIDGRAI reference implementation,
-      and regulatory alignment mapping.
+      Corrected test count (102 → 175) for consistency with
+      CAMP v2.1. Added threat model, alternative approaches
+      discussion, weight vector calibration methodology,
+      fallback strategy for scalability.
 validation_status: E2 (Reproducible)
 evidence_target: E4 (pending DOI + peer review)
 ```
