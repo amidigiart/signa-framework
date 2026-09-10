@@ -13,7 +13,7 @@ ORCID: 0009-0001-1422-6209
 
 ## Abstract
 
-Current AI systems generate outputs at scale — text, code, images, decisions — but provide no independently verifiable certification that these outputs are semantically accurate, intentionally aligned, and free from manipulation. Self-reported quality metrics from AI providers are structurally insufficient: the entity generating the output cannot impartially certify it. This paper introduces SIGNA (Semantic Intent Guarantee and Notary Architecture), a certification framework that validates AI outputs across six independent dimensions — semantic fidelity, intent alignment, emotional safety, disinformation resistance, logical consistency, and contextual appropriateness — and issues cryptographically anchored certificates attesting to the validation results. SIGNA operates as the certification function within CAMP (Cognitive Arbitration Mediation Protocol), transforming trust from a self-reported claim into an independently verifiable property. We present the formal certification pipeline: input intake through Agent de Sens (the Semantic Agent), multi-agent cross-validation through Concordance, trust score computation through TVE (Trust Validation Engine), and immutable anchoring on Tezos blockchain. BRIDGRAI serves as reference implementation with 13 components across 5 layers. We argue that semantic and intent certification — notarizing not just that an AI output exists, but that its meaning is real and its intention is honest — addresses a gap that no existing framework covers end-to-end.
+Current AI systems generate outputs at scale — text, code, images, decisions — but provide no independently verifiable certification that these outputs are semantically accurate, intentionally aligned, and free from manipulation. Self-reported quality metrics from AI providers are structurally insufficient: the entity generating the output cannot impartially certify it. This paper introduces SIGNA (Semantic Intent Guarantee and Notary Architecture), a certification framework that validates AI outputs across six independent dimensions — semantic fidelity, intent alignment, emotional safety, disinformation resistance, logical consistency, and contextual appropriateness — and issues cryptographically anchored certificates attesting to the validation results. SIGNA operates as the certification function within CAMP (Cognitive Arbitration Mediation Protocol), transforming trust from a self-reported claim into an independently verifiable property. We present the formal certification pipeline: input intake through Agent de Sens (the Semantic Agent), multi-agent cross-validation through Concordance, trust score computation through TVE (Trust Validation Engine), and immutable anchoring on Tezos blockchain. BRIDGRAI serves as reference implementation with 13 components — 5 core engines and 8 agents — across 5 layers. We argue that semantic and intent certification — notarizing not just that an AI output exists, but that its meaning is real and its intention is honest — addresses a gap that no existing framework covers end-to-end.
 
 **Keywords:** semantic certification, intent verification, AI trust, six-pillar validation, blockchain provenance, notary architecture, CAMP protocol, multi-agent validation
 
@@ -67,7 +67,7 @@ SIGNA can operate independently as a standalone certification framework, but rea
 
 ### 1.4 Paper Structure
 
-Section 2 reviews related work in AI output evaluation and certification. Section 3 defines the SIGNA framework formally. Section 4 describes the six-pillar validation architecture. Section 5 presents the certification pipeline. Section 6 describes the BRIDGRAI reference implementation. Section 7 maps SIGNA to regulatory requirements. Section 8 discusses limitations and open questions.
+Section 2 reviews related work in AI output evaluation and certification. Section 3 defines the SIGNA framework formally. Section 4 describes the six-pillar validation architecture. Section 5 presents the certification pipeline. Section 6 describes the BRIDGRAI reference implementation. Section 7 maps SIGNA to regulatory requirements. Section 8 discusses limitations and open questions. Section 9 concludes.
 
 ## 2. Related Work
 
@@ -85,7 +85,7 @@ Evaluation of AI outputs is an active research area with multiple approaches:
 
 ### 2.2 AI Assurance and Certification
 
-**CERTAIN framework.** The Certification for Ethical and Regulatory Transparency in AI [8] integrates regulatory compliance into MLOps lifecycle. CERTAIN operates at the system level (certifying development processes), not at the output level (certifying individual responses).
+**ISO/IEC 42001:2023.** The international standard for AI Management Systems [8] specifies requirements for establishing, implementing, and improving AI management within organizations. ISO/IEC 42001 operates at the system level (certifying organizational processes), not at the output level (certifying individual responses).
 
 **AI auditing standards.** ISO/IEC 42001 (AI Management Systems) and proposed IEEE standards define organizational practices for responsible AI. These certify that an organization follows defined processes, not that a specific output is trustworthy.
 
@@ -171,7 +171,7 @@ Weights are configurable per deployment. The default is uniform (1/6 each). Doma
 
 ### 3.4 Weight Vector Calibration Methodology
 
-Current weight vectors (Table 3.3) are based on the author's domain expertise and preliminary risk assessment. This is an acknowledged limitation.
+Current weight vectors (the weight table in §3.3) are based on the author's domain expertise and preliminary risk assessment. This is an acknowledged limitation.
 
 **Planned empirical validation:**
 
@@ -184,14 +184,16 @@ Current weight vectors (Table 3.3) are based on the author's domain expertise an
 
 ### 3.5 Certificate Levels
 
-SIGNA defines four certification levels based on the composite trust score T(O):
+SIGNA defines four certification levels based on the composite trust score T(O).
+
+**Per-pillar floor rule.** Composite score alone cannot determine the certification level. SIGNA enforces a per-pillar floor τ = 0.40 (aligned with the honest-refusal threshold used across the BRIDGRAI ecosystem): if any pillar Pⱼ(O) < τ, the level is capped at SIGNA-Cautioned regardless of T(O); if any pillar Pⱼ(O) < 0.25, the output is SIGNA-Rejected regardless of T(O). A single catastrophic pillar failure cannot be masked by five strong pillars.
 
 | Level | Score Range | Meaning | Action |
 |-------|-----------|---------|--------|
-| **SIGNA-Verified** | T ≥ 0.85 | Output passed all pillar thresholds | Certificate issued, output delivered |
-| **SIGNA-Cautioned** | 0.65 ≤ T < 0.85 | One or more pillars below threshold | Certificate issued with warnings, specific risks flagged |
+| **SIGNA-Verified** | T ≥ 0.85 and all pillars ≥ τ | Output passed all pillar thresholds | Certificate issued, output delivered |
+| **SIGNA-Cautioned** | 0.65 ≤ T < 0.85, or any pillar < τ | One or more pillars below threshold | Certificate issued with warnings, specific risks flagged |
 | **SIGNA-Flagged** | 0.40 ≤ T < 0.65 | Significant concerns detected | Human review required before delivery |
-| **SIGNA-Rejected** | T < 0.40 | Output fails trust requirements | Output blocked, incident logged, alternative requested |
+| **SIGNA-Rejected** | T < 0.40, or any pillar < 0.25 | Output fails trust requirements | Output blocked, incident logged, alternative requested |
 
 Each level is accompanied by a per-pillar breakdown, allowing consumers to understand exactly where the output failed or succeeded.
 
@@ -255,7 +257,7 @@ P3 analysis: Social proof ("smart investors"), urgency ("window is closing"), fe
 
 **Threat model:** Hallucination, fabrication, and source misattribution — the well-documented tendency of language models to generate plausible-sounding but factually incorrect content, including invented citations, fabricated statistics, and misattributed quotes.
 
-**Validation method:** Cross-model concordance verification. The same claim is submitted to multiple independent AI models. Agreement among models that share no training pipeline suggests factual grounding. Disagreement triggers deeper verification.
+**Validation method:** Cross-model claim agreement (distinct from the Concordance Agent in Stage 4, which compares validation assessments across the full pipeline). The same factual claim is submitted to multiple independent AI models. Agreement among models that share no training pipeline suggests factual grounding. Disagreement triggers deeper verification.
 
 **Design principle:** A single AI model cannot reliably detect its own hallucinations [6]. SIGNA uses inter-model disagreement as a hallucination signal — not because majority agreement guarantees truth, but because disagreement reliably indicates uncertainty.
 
@@ -335,7 +337,7 @@ The Concordance Agent implements cross-validation by comparing assessments from 
 
     Concordance(O) = 1 - (σ(A₁...Aₙ) / max_σ)
 
-Where σ is the standard deviation of assessment scores and max_σ is the maximum possible deviation. A concordance of 1.0 means perfect agreement; 0.0 means maximum disagreement.
+Where σ is the standard deviation of assessment scores and max_σ = 0.5, the theoretical maximum standard deviation for scores bounded in [0,1] (achieved when half the assessments are 0 and half are 1). A concordance of 1.0 means perfect agreement; 0.0 means maximum disagreement.
 
 **Design rationale:** No single validator is infallible. Concordance does not assume any individual assessment is correct — it uses agreement patterns to identify outputs where confidence is warranted and disagreement patterns to identify outputs that require deeper scrutiny.
 
@@ -386,7 +388,7 @@ BRIDGRAI implements SIGNA through 13 components organized across 5 layers:
 |-------|-----------|
 | Agent de Sens | Semantic intake — Stage 1 of pipeline |
 | Concordance Agent | Multi-agent cross-validation — Stage 4 |
-| Calibration Agent | Trust score calibration across domains |
+| Calibration Agent | Trust score calibration across domains (Adler/Kuramoto phase synchronization [13]) |
 | ACR Agent | Anti-confabulation runtime detection |
 | CASP Agent | Cognitive-affective safety profiling |
 | HASN Agent | Secure audit trail persistence |
@@ -609,7 +611,7 @@ This paper was produced using AI assistance:
 
 - **Research phase:** Prior art and naming verification conducted using Claude (Anthropic) — web searches for existing uses of the SIGNA name and related certification frameworks. All claims verified by the human author.
 - **Drafting phase:** Paper structure and content drafted with assistance from Claude (Anthropic). All content reviewed, corrected, and adopted by the human author.
-- **Critical review:** Structural review conducted using Qwen (Alibaba Cloud) to identify weaknesses. All identified issues addressed in final version.
+- **Critical review:** Structural weaknesses identified and corrected with Qwen (Alibaba Cloud); all corrections adopted by the human author.
 - **Cross-model methodology:** The BRIDGRAI ecosystem was developed using cross-model friction methodology — multiple AI models (Claude, Grok, DeepSeek, Gemini, Qwen) tested against each other to reduce single-source bias.
 
 The author bears full responsibility for all claims.
@@ -632,7 +634,7 @@ The author bears full responsibility for all claims.
 
 [7] Zheng, L. et al. (2023). Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. NeurIPS 2023.
 
-[8] European Commission. (2025). CERTAIN: Certification for Ethical and Regulatory Transparency in Artificial Intelligence. Horizon Europe.
+[8] ISO/IEC. (2023). ISO/IEC 42001:2023 — Information technology — Artificial intelligence — Management system.
 
 [9] European Parliament. (2024). Regulation (EU) 2024/1689 laying down harmonised rules on artificial intelligence (AI Act).
 
